@@ -1,6 +1,21 @@
 # RNNForTimeSeries
 
-This project provides a basic implementation of several Recurrent Neural Networks (RNNs) for univariate time series. Specifically, the project considers a simple RNN, a GRU (Gated Recurrent Unit) and LSTM (Long-Short-Term Memory) and analyses their performance on two stylized forecasting tasks (a linear and a sinusoidal pattern), as well as two monthly datasets (US HICP and Gasoline prices in dollar per gallon). 
+The `RNNForTimeSeries` project implements various Recurrent Neural Networks (RNNs) for univariate time series forecasting. The implementation focuses on the following aspects:
+
+## Models
+- **Simple RNN**: A basic recurrent neural network architecture.
+- **GRU (Gated Recurrent Unit)**: An advanced RNN architecture that handles long-range dependencies more effectively.
+- **LSTM (Long Short-Term Memory)**: Another advanced RNN type known for its capability to remember information over long periods.
+
+## Forecasting Tasks
+- **Linear Pattern Forecasting**: Analyzing the performance of RNN models in forecasting a linear time series pattern.
+- **Sinusoidal Pattern Forecasting**: Evaluating how these models perform with sinusoidal time series patterns.
+
+## Real-world Datasets
+- **US HICP (Harmonized Index of Consumer Prices)**: Monthly data on consumer price indices in the United States.
+- **Gasoline Prices (in USD per gallon)**: Monthly data on gasoline prices.
+
+This project aims to explore and compare the effectiveness of different RNN architectures in handling both stylized and real-world time series data.
 
 ## Project Structure
 
@@ -14,7 +29,7 @@ This project provides a basic implementation of several Recurrent Neural Network
 ## Setup
 
 1. **Clone the Repository**:
-   - Clone the repository to your local machine using `git clone [repository URL]`.
+   - Clone the repository to your local machine using `git clone https://github.com/BeerPruijt/RNNForTimeSeries.git`.
 
 2. **Create a Python Environment**:
    - Create a new Python environment with Python 3.9. You can use virtualenv or conda to do this.
