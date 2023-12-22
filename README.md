@@ -56,7 +56,11 @@ Please follow these steps to ensure a smooth setup of the project environment.
 
 To run an experiment, modify the parameters in `config.py` as needed, then run the `main.py` script.
 
-The `output/` directory is where the output of the experiments will be stored. This folder will contain the results (train, validation, and test RMSE) appended to a CSV file for hyperparameter analysis on the specified datasets. Additionally, it will include plots of the train, validation, and test predictions for each iteration.
+During the execution of `main.py`, you'll be interactively prompted to decide how to proceed with the experiments:
+- **Run All Combinations**: You can choose to run all combinations of experiments as defined in `config.py`. Simply respond with 'y' when prompted.
+- **Run a Specific Experiment**: If you prefer to run a specific experiment, respond with 'n'. You'll then be guided through a series of prompts to select the specific settings for each parameter category, such as 'datasets', 'models', etc. This allows for a tailored experiment based on your selected configurations.
+
+Once the experiment(s) start, an `output/` directory will be created where the output of the experiments will be stored. This folder will contain the results (train, validation, and test RMSE) appended to a CSV file for hyperparameter analysis on the specified datasets. Additionally, it will include JSON files with the train, validation, and test predictions for each iteration.
 
 ## Contributing
 

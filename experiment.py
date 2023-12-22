@@ -1,4 +1,4 @@
-from utils import train_val_test_split, create_dataset, generate_data_loaders, train_model, generate_dummy_series
+from utils import train_val_test_split, create_dataset, generate_data_loaders, train_model
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,8 +7,10 @@ import os
 import torch
 from sklearn.metrics import mean_squared_error
 from datetime import datetime
+import json
+from itertools import product
 
-def report_performance(model, X_train, y_train, X_val, y_val, X_test, y_test, scaler, timeseries, settings_dict):
+def report_performance(model, X_train, y_train, X_val, y_val, X_test, y_test, scaler, timeseries, settings_dict, show_plot=False):
     """
     Evaluates and reports the performance of a trained model on training, validation, and test datasets.
 
@@ -57,18 +59,30 @@ def report_performance(model, X_train, y_train, X_val, y_val, X_test, y_test, sc
         val_rmse = np.sqrt(mean_squared_error(scaler.inverse_transform(y_val.cpu().numpy()), val_preds))
         test_rmse = np.sqrt(mean_squared_error(scaler.inverse_transform(y_test.cpu().numpy()), test_preds))
 
+        # Saving
+        true_vals = scaler.inverse_transform(timeseries)
+        experiment_name = '_'.join([f"{key}={value}" for key, value in settings_dict.items()])
+        data = {
+            'true_vals': true_vals.tolist(),
+            'train_plot': train_plot.tolist(),
+            'val_plot': val_plot.tolist(),
+            'test_plot': test_plot.tolist()
+        }
+
         append_to_csv(train_rmse, val_rmse, test_rmse, settings_dict, output_dir='output')
 
+        with open(os.path.join('output', f"{experiment_name}_data.json"), 'w') as file:
+            json.dump(data, file)
+
         # Plotting
-        experiment_name = '_'.join([f"{key}={value}" for key, value in settings_dict.items()])
-        plt.figure(figsize=(15, 8))
-        plt.plot(scaler.inverse_transform(timeseries), label='Original Data', color='blue')
-        plt.plot(train_plot, label='Training Predictions', color='red')
-        plt.plot(val_plot, label='Validation Predictions', color='orange')
-        plt.plot(test_plot, label='Test Predictions', color='green')
-        plt.legend()
-        plt.savefig(os.path.join('output', f"{experiment_name}_plot.png"))
-        plt.close()
+        if show_plot:
+            plt.figure(figsize=(15, 8))
+            plt.plot(true_vals, label='Original Data', color='blue')
+            plt.plot(train_plot, label='Training Predictions', color='red')
+            plt.plot(val_plot, label='Validation Predictions', color='orange')
+            plt.plot(test_plot, label='Test Predictions', color='green')
+            plt.legend()
+            plt.show()
 
 def append_to_csv(train_rmse, val_rmse, test_rmse, settings_dict, output_dir='output'):
     # Ensure output directory exists
@@ -156,7 +170,7 @@ def generate_series(dataset='linear', log_diff=False):
 
     return timeseries_original
 
-def run_experiment(model, loss_fn, optimizer, device, n_epochs, patience, batch_size, lookback, verbose, val_size, test_size, dataset, log_diff, settings_dict):
+def run_experiment(model, loss_fn, optimizer, device, n_epochs, patience, batch_size, lookback, verbose, val_size, test_size, dataset, log_diff, settings_dict, show_plot):
     # Data preparation
     timeseries_original = generate_series(dataset, log_diff)
 
@@ -173,7 +187,7 @@ def run_experiment(model, loss_fn, optimizer, device, n_epochs, patience, batch_
 
     # Model training and evaluation
     train_model(model, train_loader, val_loader, loss_fn, optimizer, device, n_epochs, patience, verbose)
-    report_performance(model, X_train, y_train, X_val, y_val, X_test, y_test, scaler, timeseries_scaled, settings_dict)
+    report_performance(model, X_train, y_train, X_val, y_val, X_test, y_test, scaler, timeseries_scaled, settings_dict, show_plot=show_plot)
 
 def create_param_dict(dataset, model_class, lookback, batch_size, patience, learning_rate, loss_fn_class, optimizer_class, log_diff):
     """
@@ -206,3 +220,51 @@ def create_param_dict(dataset, model_class, lookback, batch_size, patience, lear
     }
 
     return param_dict
+
+def select_settings(exp_params):
+    """
+    Interactively prompts the user to select experiment settings or choose to run all experiments.
+
+    This function asks the user if they want to run all possible combinations of experiments. If the user 
+    chooses not to run all experiments, they are prompted to select specific settings for each parameter 
+    category defined in `exp_params`. The function returns a list of tuples representing the selected 
+    experiment configurations and a boolean indicating whether the user chose to run one or all experiments.
+
+    Parameters:
+    exp_params (dict): A dictionary where keys are parameter categories (like 'datasets', 'models', etc.) 
+                       and values are lists of options for each category.
+
+    Returns:
+    (list of tuples, bool): The first element is a list with one tuple (such that I can use it as an interable with 1 element) 
+                            representing the selected experiment configurations. Each tuple is a combination of parameters. 
+                            The second element is a boolean, True if only one experiment is to be run, and False otherwise.
+
+    Raises:
+    ValueError: If the user's input is not 'y' or 'n' when asked to run all experiments or if the selection 
+                is out of the valid range for a parameter category.
+    """
+    run_all = input("Do you want to run all experiments? (y/n): ").strip().lower()
+
+    if run_all not in ['y', 'n']:
+        raise ValueError("Come on you got this! Either a 'y' (for yes) or an 'n' (for no).")
+
+    selected_settings = list(product(*[exp_params[key] for key in exp_params.keys()]))
+
+    if run_all == 'n':
+        user_selections = {}
+        for category in exp_params:
+            print(f"\n{category.capitalize()} options:")
+            for i, option in enumerate(exp_params[category]):
+                print(f"{i + 1}. {option}")
+            print('')
+
+            selection = int(input(f"Number next to your choice: ")) - 1
+
+            if selection not in range(len(exp_params[category])):
+                raise ValueError(f"Let's try again! I just need a number between 1 and {len(exp_params[category])}.")
+
+            user_selections[category] = exp_params[category][selection]
+
+        selected_settings = [tuple(user_selections.values())]
+
+    return selected_settings, run_all == 'n'
