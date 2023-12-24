@@ -19,6 +19,7 @@ This project aims to explore and compare the effectiveness of different RNN arch
 
 ## Project Structure
 
+```
 RNNFORTIMESERIES/
 ├── .gitignore                  # Specifies intentionally untracked files to ignore
 ├── README.md                   # Project description and instructions
@@ -36,6 +37,7 @@ RNNFORTIMESERIES/
 └── tests/                      # Test suite for the project
     ├── test_create_dataset.py  # Tests for the create_dataset function
     └── __init__.py             # Initializes tests as a Python package
+```
 
 ## Setup
 
