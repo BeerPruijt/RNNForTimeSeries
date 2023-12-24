@@ -15,10 +15,10 @@ def main():
 
     # Iterate over all combinations of parameters 
     # NOTE: IF YOU CHANGE THIS MAKE SURE THE ORDER IS CORRECT
-    for dataset, log_diff, model_class, lookback, batch_size, patience, learning_rate, loss_fn_class, optimizer_class in selected_settings:
+    for dataset, model_class, lookback, batch_size, patience, learning_rate, loss_fn_class, optimizer_class in selected_settings:
 
         # Store the parameters of this iteration in a new dictionary
-        settings_dict = create_param_dict(dataset, model_class, lookback, batch_size, patience, learning_rate, loss_fn_class, optimizer_class, log_diff)
+        settings_dict = create_param_dict(dataset, model_class, lookback, batch_size, patience, learning_rate, loss_fn_class, optimizer_class)
 
         # Initialize model, loss function, optimizer
         model = model_class().to(device)
@@ -49,7 +49,6 @@ def main():
                        val_size=config.val_size, 
                        test_size=config.test_size, 
                        dataset=dataset, 
-                       log_diff=log_diff, 
                        settings_dict=settings_dict,
                        show_plot=run_one)
 

@@ -170,13 +170,14 @@ def generate_series(dataset='linear', log_diff=False):
 
     return timeseries_original
 
-def run_experiment(model, loss_fn, optimizer, device, n_epochs, patience, batch_size, lookback, verbose, val_size, test_size, dataset, log_diff, settings_dict, show_plot):
+def run_experiment(model, loss_fn, optimizer, device, n_epochs, patience, batch_size, lookback, verbose, val_size, test_size, dataset, settings_dict, show_plot):
     # Data preparation
-    timeseries_original = generate_series(dataset, log_diff)
+    timeseries_original = generate_series(dataset)
 
-    # Scaling
-    scaler = MinMaxScaler(feature_range=(-1, 1))
-    timeseries_scaled = scaler.fit_transform(timeseries_original)
+    # Scaling (fitted only on the 'available' data, i.e. test data is not used)
+    train_length = int(len(timeseries_original) * (1 - test_size))
+    scaler = MinMaxScaler(feature_range=(-1, 1)).fit(timeseries_original[:train_length])
+    timeseries_scaled = scaler.transform(timeseries_original)
 
     # Dataset creation
     X, y = create_dataset(timeseries_scaled, lookback=lookback, device=device)
@@ -189,7 +190,7 @@ def run_experiment(model, loss_fn, optimizer, device, n_epochs, patience, batch_
     train_model(model, train_loader, val_loader, loss_fn, optimizer, device, n_epochs, patience, verbose)
     report_performance(model, X_train, y_train, X_val, y_val, X_test, y_test, scaler, timeseries_scaled, settings_dict, show_plot=show_plot)
 
-def create_param_dict(dataset, model_class, lookback, batch_size, patience, learning_rate, loss_fn_class, optimizer_class, log_diff):
+def create_param_dict(dataset, model_class, lookback, batch_size, patience, learning_rate, loss_fn_class, optimizer_class):
     """
     Creates a dictionary of parameters with their respective names as keys.
 
@@ -202,7 +203,6 @@ def create_param_dict(dataset, model_class, lookback, batch_size, patience, lear
     - learning_rate: The learning rate for the optimizer.
     - loss_fn_class: The class of the loss function.
     - optimizer_class: The class of the optimizer.
-    - log_diff: Whether logarithmic differencing is applied.
 
     Returns:
     - A dictionary containing the parameters and their values.
@@ -215,8 +215,7 @@ def create_param_dict(dataset, model_class, lookback, batch_size, patience, lear
         'patience': patience,
         'learning_rate': learning_rate,
         'loss_fn_class': loss_fn_class.__name__ if loss_fn_class else None,
-        'optimizer_class': optimizer_class.__name__ if optimizer_class else None,
-        'log_diff': log_diff
+        'optimizer_class': optimizer_class.__name__ if optimizer_class else None
     }
 
     return param_dict

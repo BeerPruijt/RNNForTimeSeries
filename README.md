@@ -19,12 +19,23 @@ This project aims to explore and compare the effectiveness of different RNN arch
 
 ## Project Structure
 
-- `config.py`: Contains the configuration parameters for the experiments.
-- `data/`: Contains the data files used in the experiments.
-- `experiment.py`: Contains the code to run a single experiment.
-- `main.py`: The main entry point of the application. It creates an output folder, sets up- and runs the experiments.
-- `models.py`: Contains the model definitions.
-- `utils.py`: Contains utility functions that I expect to re-use when taking these models to production elsewhere.
+RNNFORTIMESERIES/
+├── .gitignore                  # Specifies intentionally untracked files to ignore
+├── README.md                   # Project description and instructions
+├── requirements.txt            # List of dependencies for the project
+├── data/                       # Data files used in the project
+│   ├── gasoline_data.txt       # Gasoline data for analysis
+│   └── hicp_data.txt           # HICP data for analysis
+├── src/                        # Source code for the project
+│   ├── config.py               # Configuration settings and parameters
+│   ├── experiment.py           # Code to run experiments
+│   ├── main.py                 # Main script to run the project
+│   ├── models.py               # Definitions of the model architectures
+│   ├── utils.py                # Utility functions used across the project
+│   └── __init__.py             # Initializes src as a Python package
+└── tests/                      # Test suite for the project
+    ├── test_create_dataset.py  # Tests for the create_dataset function
+    └── __init__.py             # Initializes tests as a Python package
 
 ## Setup
 

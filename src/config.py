@@ -5,7 +5,6 @@ import models
 # Variable parameters for which we investigate the effect
 experiment_parameters = {
     'datasets': ['linear', 'sinus', 'gasoline', 'hicp'],
-    'logdiff': [False],
     'models': [models.RnnModel, models.GRUModel, models.LSTMModel],
     'lookbacks': [1, 4, 8],
     'batch_sizes': [1, 4, 16],
