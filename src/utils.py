@@ -3,23 +3,22 @@ import numpy as np
 import pandas as pd
 import torch
 
-def train_val_test_split(X, y, val_size=0.1, test_size=0.3):
+def train_test_split(X, y, test_size=0.1):
     """
-    Splits time series data into training, validation, and test sets.
+    Splits time series data into training and test sets.
 
-    This function divides a given dataset into three subsets: training, validation, and test sets.
-    The division is based on specified percentages of the dataset. It is designed specifically for 
-    univariate time series data, ensuring that the chronological order is maintained in the splits.
+    This function divides a given dataset into two subsets: training and validation/test sets.
+    The division is based on a specified proportion of the dataset for the validation/test set. 
+    It is designed specifically for univariate time series data, ensuring that the 
+    chronological order is maintained in the splits.
 
     Parameters:
     - X (torch.Tensor): Input data to be split. Should be a time series dataset.
     - y (torch.Tensor): Target values corresponding to the input data.
-    - val_size (float, optional): Proportion of the dataset to include in the validation set. Defaults to 0.1.
-    - test_size (float, optional): Proportion of the dataset to include in the test set. Defaults to 0.3.
+    - test_size (float, optional): Proportion of the dataset to include in the validation/test set. Defaults to 0.1.
 
     Returns:
     - X_train, y_train (torch.Tensor): Training data and labels.
-    - X_val, y_val (torch.Tensor): Validation data and labels.
     - X_test, y_test (torch.Tensor): Test data and labels.
 
     Raises:
@@ -32,44 +31,39 @@ def train_val_test_split(X, y, val_size=0.1, test_size=0.3):
     assert X.shape[0] == y.shape[0]
 
     # Determine lengths of each subset
-    train_size = int(len(y) * (1-val_size-test_size))
-    val_size = int(len(y) * val_size) # Adjust this ratio as needed
-    test_size = len(y) - train_size - val_size
+    train_size = int(len(y) * (1 - test_size))
 
-    # Create datasets for training, validation, and test
+    # Create datasets for training and test
     X_train, y_train = X[:train_size], y[:train_size]
-    X_val, y_val = X[train_size:train_size + val_size], y[train_size:train_size + val_size]
-    X_test, y_test = X[train_size + val_size:], y[train_size + val_size:]
+    X_test, y_test = X[train_size:], y[train_size:]
 
-    return X_train, y_train, X_val, y_val, X_test, y_test
+    return X_train, y_train, X_test, y_test
 
-def generate_data_loaders(X_train, y_train, X_val, y_val, X_test, y_test, batch_size, shuffle=False):
+def generate_data_loaders(X_train, y_train, X_test, y_test, batch_size, shuffle=False):
     """
-    Creates DataLoader objects for training, validation, and test datasets.
+    Creates DataLoader objects for training and test datasets.
 
-    This function takes in the training, validation, and test datasets and their corresponding labels,
+    This function takes in the training and test datasets and their corresponding labels,
     and creates PyTorch DataLoader objects for each. These DataLoaders can then be used to iterate over
     the datasets in batches during the training and evaluation process.
 
     Parameters:
-    - X_train, X_val, X_test (torch.Tensor): Input data for the training, validation, and test sets, respectively.
-    - y_train, y_val, y_test (torch.Tensor): Target values (labels) for the training, validation, and test sets, respectively.
+    - X_train, X_test (torch.Tensor): Input data for the training and test sets, respectively.
+    - y_train, y_test (torch.Tensor): Target values (labels) for the training and test sets, respectively.
     - batch_size (int): The size of the batches in which the data should be loaded.
-    - shuffle (bool, optional): Whether to shuffle the training and validation data before each epoch. Defaults to False.
+    - shuffle (bool, optional): Whether to shuffle the training data before each epoch. Defaults to False.
 
     Returns:
     - train_loader (torch.utils.data.DataLoader): DataLoader for the training set.
-    - val_loader (torch.utils.data.DataLoader): DataLoader for the validation set.
     - test_loader (torch.utils.data.DataLoader): DataLoader for the test set.
 
     Note:
     The test DataLoader is always created with shuffle set to False, to ensure the test data order is preserved.
     """
     train_loader = data.DataLoader(data.TensorDataset(X_train, y_train), shuffle=shuffle, batch_size=batch_size) 
-    val_loader = data.DataLoader(data.TensorDataset(X_val, y_val), shuffle=shuffle, batch_size=batch_size)
     test_loader = data.DataLoader(data.TensorDataset(X_test, y_test), shuffle=False, batch_size=batch_size)
 
-    return train_loader, val_loader, test_loader
+    return train_loader, test_loader
 
 def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num_epochs, patience, verbose=False):
     """
@@ -93,7 +87,7 @@ def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num
     - verbose (bool, optional): If True, prints progress of training after each epoch. Defaults to False.
 
     Returns:
-    None. The function trains the model in-place and updates its weights.
+    - float: The best validation loss achieved during training.
     """
     best_val_loss = float('inf')
     consecutive_no_improvement = 0
@@ -107,21 +101,18 @@ def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num
             y_pred = model(X_batch)
             loss = loss_fn(y_pred, y_batch)
             
-            # We reset the gradients (by default they accumulate)
+            # Reset the gradients
             optimizer.zero_grad()
-            # Backpropagate (i.e. calculate gradient of the loss from output layer to the input layer)
+            # Backpropagate
             loss.backward()
             # Update the parameters
             optimizer.step()
 
         # Evaluation phase
-        train_loss = evaluate_model(model, train_loader, loss_fn, device)
         val_loss = evaluate_model(model, val_loader, loss_fn, device)
 
         if verbose:
-            print(f'Epoch {epoch + 1}/{num_epochs}, Loss: {train_loss:.4f}')
-            print(f'Validation Loss: {val_loss:.4f}')
-            print(f'Best Validation Loss: {best_val_loss:.4f}')
+            print(f'Epoch {epoch + 1}/{num_epochs}, Validation Loss: {val_loss:.4f}, Best Validation Loss: {best_val_loss:.4f}')
 
         # Early stopping check
         if val_loss < best_val_loss:
@@ -136,9 +127,11 @@ def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num
                 print(f'Early stopping at epoch {epoch + 1} as validation loss has not improved for {patience} consecutive epochs.')
             break
 
-    # Load the best model before returning
+    # Load the best model
     if best_model is not None:
         model.load_state_dict(best_model)
+
+    return best_val_loss
 
 def evaluate_model(model, loader, loss_fn, device):
     """

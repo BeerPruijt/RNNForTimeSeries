@@ -1,4 +1,4 @@
-from utils import train_val_test_split, create_dataset, generate_data_loaders, train_model
+from utils import train_test_split, create_dataset, generate_data_loaders, train_model
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,6 +9,7 @@ from sklearn.metrics import mean_squared_error
 from datetime import datetime
 import json
 from itertools import product
+import config
 
 def report_performance(model, X_train, y_train, X_val, y_val, X_test, y_test, scaler, timeseries, settings_dict, show_plot=False):
     """
@@ -114,8 +115,7 @@ def append_to_csv(train_rmse, val_rmse, test_rmse, settings_dict, output_dir='ou
     else:
         df.to_csv(csv_file, mode='a', header=False, index=False)
 
-
-def generate_series(dataset='linear', log_diff=False):
+def generate_series(dataset='linear'):
     """
     The datasets look something like this:
 
@@ -155,40 +155,49 @@ def generate_series(dataset='linear', log_diff=False):
     
     # Gasoline prices in dollar per gallon
     elif dataset == 'gasoline':
-        df = pd.read_csv('data/gasoline_data.txt', sep='\t', parse_dates=True).rename(columns={'oil': 'data'})
+        df = pd.read_csv('../data/gasoline_data.txt', sep='\t', parse_dates=True).rename(columns={'oil': 'data'})
 
     # American HICP (inflation) index
     elif dataset == 'hicp':
-        df = pd.read_csv('data/hicp_data.txt', sep='\t', parse_dates=True).rename(columns={'hicp': 'data'})
+        df = pd.read_csv('../data/hicp_data.txt', sep='\t', parse_dates=True).rename(columns={'hicp': 'data'})
 
-    start_idx = 0
-    if log_diff:
-        df.loc[:, 'data'] = np.log(df.loc[:, 'data']).diff() 
-        start_idx = 1
+    else:
+        try:
+            df = pd.read_csv(f'C:\\Users\\beerp\\Data\\cpi_as_txt\\{dataset}.txt', sep='\t', parse_dates=True)
+        except:
+            raise ValueError(f"Dataset ({dataset}) not found. Please specify a valid dataset name or path to a dataset.")
 
-    timeseries_original = df.loc[df.index[start_idx::], ['data']].values.astype('float32')
+    timeseries_original = df.loc[:, ['data']].values.astype('float32')
 
     return timeseries_original
 
-def run_experiment(model, loss_fn, optimizer, device, n_epochs, patience, batch_size, lookback, verbose, val_size, test_size, dataset, settings_dict, show_plot):
-    # Data preparation
-    timeseries_original = generate_series(dataset)
+def run_experiment(model, loss_fn, optimizer, device, n_epochs, patience, batch_size, lookback, verbose, val_size, dataset):
 
-    # Scaling (fitted only on the 'available' data, i.e. test data is not used)
-    train_length = int(len(timeseries_original) * (1 - test_size))
-    scaler = MinMaxScaler(feature_range=(-1, 1)).fit(timeseries_original[:train_length])
-    timeseries_scaled = scaler.transform(timeseries_original)
+    datasets = config.cpi_categories
+    all_errors = []
 
-    # Dataset creation
-    X, y = create_dataset(timeseries_scaled, lookback=lookback, device=device)
-    X_train, y_train, X_val, y_val, X_test, y_test = train_val_test_split(X, y, val_size=val_size, test_size=test_size)
+    for dataset_temp in datasets:
 
-    # DataLoader creation
-    train_loader, val_loader, _ = generate_data_loaders(X_train, y_train, X_val, y_val, X_test, y_test, batch_size, shuffle=False)
+        # Data preparation
+        timeseries_original = generate_series(dataset_temp)
 
-    # Model training and evaluation
-    train_model(model, train_loader, val_loader, loss_fn, optimizer, device, n_epochs, patience, verbose)
-    report_performance(model, X_train, y_train, X_val, y_val, X_test, y_test, scaler, timeseries_scaled, settings_dict, show_plot=show_plot)
+        # Scaling 
+        scaler = MinMaxScaler(feature_range=(-1, 1))
+        timeseries_scaled = scaler.fit_transform(timeseries_original)
+
+        # Dataset creation
+        X, y = create_dataset(timeseries_scaled, lookback=lookback, device=device)
+        X_train, y_train, X_val, y_val = train_test_split(X, y, test_size=val_size)
+
+        # DataLoader creation
+        train_loader, val_loader = generate_data_loaders(X_train, y_train, X_val, y_val, batch_size, shuffle=False)
+
+        # Model training and evaluation
+        best_val_loss = train_model(model, train_loader, val_loader, loss_fn, optimizer, device, n_epochs, patience, verbose)
+
+        all_errors += [best_val_loss]
+
+    return np.mean(np.array(all_errors))
 
 def create_param_dict(dataset, model_class, lookback, batch_size, patience, learning_rate, loss_fn_class, optimizer_class):
     """

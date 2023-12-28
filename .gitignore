@@ -8,6 +8,10 @@ __pycache__/
 
 output/
 
+# Databases
+*.sqlite3
+*.db
+
 # Distribution / packaging
 .Python
 build/
