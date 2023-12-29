@@ -12,6 +12,10 @@ output/
 *.sqlite3
 *.db
 
+# Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
 # Distribution / packaging
 .Python
 build/

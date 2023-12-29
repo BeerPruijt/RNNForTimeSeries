@@ -3,18 +3,17 @@ experiment_parameters = {
     'models': ['RnnModel'],
     'loss_functions': ['MSELoss'],
     'optimizers': ['Adam'],
-    'min_lookback': 6,
+    'min_lookback': 1,
     'max_lookback': 12,
-    'min_batch_size': 1,
-    'max_batch_size': 50,
+    'batch_sizes': [1, 2, 8, 16, 32, 64],
     'min_patience': 10,
     'max_patience': 100,
-    'min_num_layers': 3,
-    'max_num_layers': 4,
+    'min_num_layers': 1,
+    'max_num_layers': 5,
     'min_hidden_size': 8,
     'max_hidden_size': 64,
     'min_learning_rate': 0.00001,
-    'max_learning_rate': 0.001
+    'max_learning_rate': 0.01
 }
 
 # Fixed parameters, that should be set the same for all experiments

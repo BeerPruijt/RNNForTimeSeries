@@ -16,7 +16,7 @@ def objective(trial):
     # Suggest parameters using Optuna
     model_class = model_classes[trial.suggest_categorical('model_class', config.experiment_parameters['models'])]
     lookback = trial.suggest_int('lookback', config.experiment_parameters['min_lookback'], config.experiment_parameters['max_lookback'])
-    batch_size = trial.suggest_int('batch_size', config.experiment_parameters['min_batch_size'], config.experiment_parameters['max_batch_size'])
+    batch_size = trial.suggest_categorical('batch_sizes', config.experiment_parameters['batch_sizes'])
     patience = trial.suggest_int('patience', config.experiment_parameters['min_patience'], config.experiment_parameters['max_patience'])
     learning_rate = trial.suggest_float('learning_rate', config.experiment_parameters['min_learning_rate'], config.experiment_parameters['max_learning_rate'], log=True)
     loss_fn_class = loss_fn_classes[trial.suggest_categorical('loss_fn_class', ['MSELoss'])]

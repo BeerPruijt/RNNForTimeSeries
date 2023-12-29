@@ -185,3 +185,32 @@ def create_dataset(timeseries, lookback, device='cpu'):
         y.append(target)
 
     return torch.tensor(np.array(X)).to(device), torch.tensor(np.array(y)).to(device)
+
+def recursive_forecast(model, initial_input, n_steps):
+    """
+    Perform recursive forecasting using the trained model.
+
+    Args:
+    model: The trained RNN model.
+    initial_input: A tensor containing the initial input data (last part of the time series).
+    n_steps: Number of future steps to forecast.
+
+    Returns:
+    A list of predicted values, should probably still be inverse transformed using something like scaler.inverse_transform(np.array(predictions).reshape(-1, 1)).
+    """
+
+    model.eval()  # Set the model to evaluation mode
+    predictions = []
+    input_seq = initial_input
+
+    with torch.no_grad():
+        for _ in range(n_steps):
+            # Predict the next step
+            prediction = model(input_seq)
+            # Add the prediction to the list
+            predictions.append(prediction.cpu().numpy().item())
+            # Concatenate the torch.Size([1, 1]) prediction with the torch.Size([1, lookback, 1]) input
+            input_seq = torch.cat((input_seq[:, 1:], prediction.unsqueeze(0)), dim=1)
+
+    # Inverse transform the predictions to original scale
+    return predictions
