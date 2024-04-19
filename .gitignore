@@ -7,6 +7,8 @@ __pycache__/
 *.so
 
 output/
+*.ipynb 
+*.db
 
 # Distribution / packaging
 .Python
