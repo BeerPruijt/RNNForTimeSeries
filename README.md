@@ -30,13 +30,13 @@ RNNFORTIMESERIES/
 ├── src/                        # Source code for the project
 │   ├── config.py               # Configuration settings and parameters
 │   ├── experiment.py           # Code to run experiments
-│   ├── main.py                 # Main script to run the project
 │   ├── models.py               # Definitions of the model architectures
 │   ├── utils.py                # Utility functions used across the project
 │   └── __init__.py             # Initializes src as a Python package
-└── tests/                      # Test suite for the project
-    ├── test_create_dataset.py  # Tests for the create_dataset function
-    └── __init__.py             # Initializes tests as a Python package
+├── tests/                      # Test suite for the project
+│   ├── test_create_dataset.py  # Tests for the create_dataset function
+│   └── __init__.py             # Initializes tests as a Python package
+└── main.py                 # Main script to run the project
 ```
 
 ## Setup
