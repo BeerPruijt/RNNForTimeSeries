@@ -36,7 +36,7 @@ RNNFORTIMESERIES/
 ├── tests/                      # Test suite for the project
 │   ├── test_create_dataset.py  # Tests for the create_dataset function
 │   └── __init__.py             # Initializes tests as a Python package
-└── main.py                 # Main script to run the project
+└── main.py                     # Main script to run the project
 ```
 
 ## Setup
