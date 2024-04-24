@@ -1,6 +1,6 @@
 import torch.optim as optim
 import torch.nn as nn
-import models
+import src.models as models
 
 # Variable parameters for which we investigate the effect
 experiment_parameters = {

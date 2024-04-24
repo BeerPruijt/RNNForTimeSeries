@@ -1,4 +1,4 @@
-from utils import train_val_test_split, create_dataset, generate_data_loaders, train_model
+from src.utils import train_val_test_split, create_dataset, generate_data_loaders, train_model
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import numpy as np

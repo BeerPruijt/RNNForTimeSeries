@@ -1,10 +1,10 @@
 import torch
 from itertools import product
-import models
+import src.models
 import torch.nn as nn
 import torch.optim as optim
-from experiment import run_experiment, create_param_dict, select_settings
-import config  # Assuming config contains experiment_parameters
+from src.experiment import run_experiment, create_param_dict, select_settings
+import src.config as config  # Assuming config contains experiment_parameters
 
 def main():
     # Retrieve experiment parameters
